@@ -54,7 +54,9 @@ runs:
 
         new_tag="v$major.$minor.$patch"
         mkdir -p dist/
-        cp action.yml dist/
+        if [ -e action.yml ]; then
+          cp action.yml dist/
+        fi
         printf '%s\n' "$new_tag" > dist/releasetag.txt
         printf '%s\n' "$log_lines" | grep -v 'chore(release):' > dist/changelog.md
         printf 'Semantic version tag: %s -> %s\n' "${latest_tag:-none}" "$new_tag"
