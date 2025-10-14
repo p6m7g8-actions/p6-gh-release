@@ -1,6 +1,12 @@
 name: "P6 GHA: Strawman GH release"
 description: "P6 GHA: Strawman GH release"
 author: "Philip M. Gollucci"
+
+inputs:
+  gh_token:
+    description: "GitHub token for authentication"
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -65,7 +71,7 @@ runs:
     - name: Github Release
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.P6_A_GH_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.gh_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_REF: ${{ github.ref }}
       run: |

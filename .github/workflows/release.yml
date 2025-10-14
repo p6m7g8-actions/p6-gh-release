@@ -18,3 +18,5 @@ jobs:
           fetch-depth: 0
       - name: Release
         uses: ./
+        with:
+          gh_token: ${{ secrets.P6_A_GH_TOKEN }}
