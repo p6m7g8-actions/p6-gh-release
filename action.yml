@@ -54,7 +54,7 @@ runs:
 
         new_tag="v$major.$minor.$patch"
         mkdir -p dist/
-        if [ -e action.yml ]; then
+        if [ -f action.yml ]; then
           cp action.yml dist/
         fi
         printf '%s\n' "$new_tag" > dist/releasetag.txt
