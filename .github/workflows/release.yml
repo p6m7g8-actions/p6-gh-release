@@ -10,8 +10,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      contents: write
     steps:
+      # XXX: This intentionally double so it can use it next
+      # XXX: Consumers rely on its internal checkout
       - name: Checkout repository
         uses: actions/checkout@v5.0.0
         with:
