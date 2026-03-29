@@ -12,11 +12,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: p6m7g8-actions/checkout@main
-        with:
-          fetch-depth: 0
       - name: Release
-        uses: ./
+        uses: p6m7g8-actions/p6-gh-release@main
         with:
           gh_token: ${{ secrets.P6_A_GH_TOKEN }}
