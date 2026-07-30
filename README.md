@@ -23,13 +23,14 @@
 ## Version bumping
 
 The next version is derived from the conventional-commit subjects of the commits
-since the most recent `v*` tag. Matching is anchored to the commit prefix, so a
-message that merely contains a keyword does not move the version.
+since the highest `v*` tag, selected by version order rather than commit date.
+Matching is anchored to the commit prefix, so a message that merely contains a
+keyword does not move the version.
 
 | Commit | Bump |
 | --- | --- |
-| `BREAKING CHANGE:` in the commit body | major |
-| `feat!:` or `fix(scope)!:` | major |
+| `BREAKING CHANGE:` or `BREAKING-CHANGE:` starting a line in the body | major |
+| `<type>!:` or `<type>(scope)!:`, for any type | major |
 | `major:` | major |
 | `feat:` | minor |
 | `fix:` | patch |
@@ -43,4 +44,7 @@ consequences worth knowing:
   produced a major one, because the match was an unanchored substring.
 - A breaking change is detected from either the `!` marker or a `BREAKING CHANGE:`
   footer. The footer requires the full commit body, which is why the action reads
-  both `%s` and `%B`.
+  both `%s` and `%B`. It must start a line, so `not a BREAKING CHANGE: relax`
+  inside a paragraph does not bump major.
+- The `!` marker counts on any lowercase type, not only `feat` and `fix`. A commit
+  subject of `docs!: drop the v1 examples` therefore produces a major bump.
