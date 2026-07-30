@@ -26,31 +26,39 @@ runs:
           minor=0
           patch=0
           log_lines=$(git log --pretty="format:- %s")
+          full_log=$(git log --pretty="format:%B")
         else
-          log_lines=$(git log $latest_tag..HEAD --pretty="format:- %s")
-          major=$(echo $latest_tag | cut -d. -f1 | sed -e 's,^v,,')
-          minor=$(echo $latest_tag | cut -d. -f2)
-          patch=$(echo $latest_tag | cut -d. -f3)
+          log_lines=$(git log "$latest_tag"..HEAD --pretty="format:- %s")
+          full_log=$(git log "$latest_tag"..HEAD --pretty="format:%B")
+          major=$(echo "$latest_tag" | cut -d. -f1 | sed -e 's,^v,,')
+          minor=$(echo "$latest_tag" | cut -d. -f2)
+          patch=$(echo "$latest_tag" | cut -d. -f3)
         fi
 
-        if echo "$log_lines" | grep -q "BREAKING CHANGE"; then
-          major=$((major + 1))
-          minor=0
-          patch=0
-        elif echo "$log_lines" | grep -q "major"; then
-          major=$((major + 1))
-          minor=0
-          patch=0
-        elif echo "$log_lines" | grep -q "feat"; then
-          minor=$((minor + 1))
-          patch=0
-        elif echo "$log_lines" | grep -q "fix"; then
-          patch=$((patch + 1))
-        elif echo "$log_lines" | grep -v "chore(release):" | grep -q "chore"; then
-          patch=$((patch + 1))
-        else
-          true
+        # Bump detection is anchored to conventional-commit prefixes. Bare
+        # substring matches used to fire on any message merely CONTAINING the
+        # word: "docs: major README rework" bumped major, and "refactor:
+        # simplify prefix handling" bumped patch off the "fix" inside "prefix".
+        # A `!` marker and a BREAKING CHANGE footer are now both major; the
+        # footer needs %B because %s only carries the subject line.
+        bump_kind="none"
+        if printf '%s\n' "$full_log" | grep -qE '^BREAKING[ -]CHANGE:' \
+           || printf '%s\n' "$log_lines" | grep -qE '^- [a-z]+(\([^)]*\))?!:' \
+           || printf '%s\n' "$log_lines" | grep -qE '^- major(\([^)]*\))?:'; then
+          bump_kind="major"
+        elif printf '%s\n' "$log_lines" | grep -qE '^- feat(\([^)]*\))?:'; then
+          bump_kind="minor"
+        elif printf '%s\n' "$log_lines" | grep -qE '^- fix(\([^)]*\))?:'; then
+          bump_kind="patch"
+        elif printf '%s\n' "$log_lines" | grep -v 'chore(release):' | grep -qE '^- chore(\([^)]*\))?:'; then
+          bump_kind="patch"
         fi
+
+        case "$bump_kind" in
+          major) major=$((major + 1)); minor=0; patch=0 ;;
+          minor) minor=$((minor + 1)); patch=0 ;;
+          patch) patch=$((patch + 1)) ;;
+        esac
 
         new_tag="v$major.$minor.$patch"
         mkdir -p dist/
@@ -63,14 +71,18 @@ runs:
         printf 'ChangeLog:\n'
         cat dist/changelog.md
 
-        if grep -E "^- (chore|fix|feat|major)\!*" dist/changelog.md; then
-          echo "bump=true" >> $GITHUB_OUTPUT
+        # Reuse the decision above rather than re-deriving it with a second,
+        # differently-worded grep. This output was previously computed and then
+        # never consumed, because the release step had no `if:`.
+        if [ "$bump_kind" = "none" ]; then
+          echo "bump=false" >> "$GITHUB_OUTPUT"
         else
-          echo "bump=false" >> $GITHUB_OUTPUT
+          echo "bump=true" >> "$GITHUB_OUTPUT"
         fi
         set +x
 
     - name: Github Release
+      if: steps.bump.outputs.bump == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.gh_token }}
