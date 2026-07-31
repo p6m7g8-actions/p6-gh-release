@@ -9,7 +9,7 @@
 
 ```yaml
       - name: Release
-        uses: p6m7g8-actions/p6-gh-release@main
+        uses: p6m7g8-actions/p6-gh-release-cut@main
         with:
           gh_token: ${{ secrets.P6_A_GH_TOKEN }}
 ```
