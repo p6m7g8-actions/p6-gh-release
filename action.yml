@@ -11,7 +11,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout repository
-      uses: p6m7g8-actions/checkout@main
+      uses: p6m7g8-actions/gh-repo-checkout@main
       with:
         fetch-depth: 0
 
